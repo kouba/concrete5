@@ -19,53 +19,62 @@ class RemoveOldPageVersions extends AbstractJob
         return t("Removes all except the 10 most recent page versions for each page.");
     }
 
-    public function run()
-    {
-        $pNum = (int) Config::get('concrete.maintenance.version_job_page_num');
-        $pNum = $pNum < 0 ? 1 : $pNum + 1;
+  public function run()
+  {
 
-        $pl = new PageList();
-        $pl->ignorePermissions();
-        $pl->setItemsPerPage(3);
-        $pl->filter('p.cID', $pNum, '>=');
-        $pl->sortByCollectionIDAscending();
-        $pagination = $pl->getPagination();
-        $pages = $pagination->getCurrentPageResults();
+    $pNum = (int) Config::get('concrete.maintenance.version_job_page_num');
+    $pNum = $pNum < 0 ? 1 : $pNum + 1;
+    /** @var \Concrete\Core\Page\PageList $pl */
+    $pl = new \Concrete\Core\Page\PageList;
+    $pl->ignorePermissions();
+    $pl->includeInactivePages();
+    $pl->includeAliases();
+    $pl->includeSystemPages();
+    $pl->sortByCollectionIDAscending();
+    $pages = $pl->getResults();
 
-        /* probably want to keep a record of pages that have been gone through
-         * so you don't start from the beginning each time..
-         */
+    /* probably want to keep a record of pages that have been gone through
+     * so you don't start from the beginning each time..
+     */
+    if (!count($pages)) {
+      Config::save('concrete.maintenance.version_job_page_num', 0);
 
-        if (!count($pages)) {
-            Config::save('concrete.maintenance.version_job_page_num', 0);
-
-            return t("All pages have been processed, starting from beginning on next run.");
-        }
-
-        $versionCount = 0;
-        $pagesAffected = array();
-        foreach ($pages as $page) {
-            $pvl = new VersionList($page);
-            $pagesAffected[] = $page->getCollectionID();
-            foreach (array_slice($pvl->get(), 10) as $v) {
-                if ($v instanceof Version && !$v->isApproved() && !$v->isMostRecent()) {
-                    @$v->delete();
-                    ++$versionCount;
-                }
-            }
-            $pNum = $page->getCollectionID();
-        }
-        $pageCount = count($pagesAffected);
-        Config::save('concrete.maintenance.version_job_page_num', $pNum);
-
-        //i18n: %1$d is the number of versions deleted, %2$d is the number of affected pages, %3$d is the number of times that the Remove Old Page Versions job has been executed.
-        return t2(
-            '%1$d versions deleted from %2$d page (%3$s)',
-            '%1$d versions deleted from %2$d pages (%3$s)',
-            $pageCount,
-            $versionCount,
-            $pageCount,
-            implode(',', $pagesAffected)
-        );
+      return t("All pages have been processed, starting from beginning on next run.");
     }
+
+    $versionCount = 0;
+    $pagesAffected = array();
+    foreach ($pages as $page) {
+      $pvl = new VersionList($page);
+      $pageVersions = array_slice($pvl->get(), 10);
+      if(count($pageVersions) > 0 ){
+        $pagesAffected[] = $page->getCollectionID();
+        foreach ($pageVersions as $v) {
+          if ($v instanceof Version && !$v->isApproved() && !$v->isMostRecent()) {
+            try{
+              @$v->delete();
+            }catch(\Exception $ex){
+              Log::addEntry($ex->getMessage());
+            }
+
+            ++$versionCount;
+          }
+        }
+      }
+
+      $pNum = $page->getCollectionID();
+    }
+    $pageCount = count($pagesAffected);
+    Config::save('concrete.maintenance.version_job_page_num', $pNum);
+
+    //i18n: %1$d is the number of versions deleted, %2$d is the number of affected pages, %3$d is the number of times that the Remove Old Page Versions job has been executed.
+    return t2(
+      '%1$d versions deleted from %2$d page (%3$s)',
+      '%1$d versions deleted from %2$d pages (%3$s)',
+      $pageCount,
+      $versionCount,
+      $pageCount,
+      implode(',', $pagesAffected)
+    );
+  }
 }
