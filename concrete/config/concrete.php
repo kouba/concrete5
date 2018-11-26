@@ -6,9 +6,9 @@ return [
      *
      * @var string
      */
-    'version' => '8.5.0a1',
-    'version_installed' => '8.5.0a1',
-    'version_db' => '20180716000000', // the key of the latest database migration
+    'version' => '8.5.0a2',
+    'version_installed' => '8.5.0a2',
+    'version_db' => '20180926070300', // the key of the latest database migration
 
     /*
      * Installation status
@@ -465,6 +465,13 @@ return [
          * @var bool
          */
         'enable_move_blocktypes_across_sets' => false,
+        /*
+         * Control whether or not the image editor should add crossOrigin when loading images from external sources (s3, etc)
+         */
+        'image_editor_cors_policy' => [
+            'enable_cross_origin' => false,
+            'anonymous_request' => true,
+        ],
     ],
 
     'theme' => [
@@ -516,6 +523,18 @@ return [
             'use_exif_data_to_rotate_images' => false,
             'manipulation_library' => 'gd',
             'create_high_dpi_thumbnails' => true,
+            /*
+             * The style of preview image used in the file_manager
+             *
+             * @var string 'small'(default,30x30), 'large(60x60)' or 'full(size of file_manager_listing)'
+             */
+            'preview_image_size' => 'small',
+            /*
+             * Show file_manager_detail thumbnail as preview image in popover
+             *
+             * @var boolean
+             */
+            'preview_image_popover' => true
         ],
         'results' => 10,
     ],
@@ -940,4 +959,20 @@ return [
         // [float] The time in seconds until idle triggers a save (set to 0 to disable autosave)
         'idle_timeout' => 1,
     ],
+
+    /*
+     * ------------------------------------------------------------------------
+     * API settings
+     * ------------------------------------------------------------------------
+     */
+    'api' => [
+        /*
+         * Enabled
+         *
+         * @var bool
+         */
+        'enabled' => false,
+
+    ],
+
 ];

@@ -167,7 +167,11 @@ class Sitemap
             $nodeOpen = true;
         }
 
-        $numSubpages = ($c->getNumChildren()  > 0) ? $c->getNumChildren()  : '';
+        if ($c->getCollectionPointerID()) {
+            $numSubpages = 0;
+        } else {
+            $numSubpages = (int) $c->getNumChildren();
+        }
 
         $cvName = ($c->getCollectionName() !== '') ? $c->getCollectionName() : '(No Title)';
         $cvName = ($c->isSystemPage() || $cID == 1) ? t($cvName) : $cvName;
@@ -206,7 +210,7 @@ class Sitemap
                 $cAlias = 'POINTER';
                 $cID = $c->getCollectionPointerOriginalID();
             } else {
-                $cIconClass = 'fa fa-sign-out';
+                $cIconClass = 'fa fa-external-link';
                 $cAlias = 'LINK';
             }
         }
