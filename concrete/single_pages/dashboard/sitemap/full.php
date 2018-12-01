@@ -74,14 +74,5 @@ $(function() {
             sitemapIndex: parseInt($my.data('sitemap-index'), 10) || 0
         });
     });
-
-    $('input[name=includeSystemPages]').on('click', function() {
-        var $tree = $('div#ccm-full-sitemap-container div.ccm-sitemap-tree');
-        $tree.fancytree('destroy');
-
-        $('#ccm-full-sitemap-container').html('').concreteSitemap({
-            includeSystemPages: $('input[name=includeSystemPages]').is(':checked')
-        });
-    });
 });
 </script>
